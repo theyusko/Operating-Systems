@@ -1,1 +1,1 @@
-# Operating-Systems-Study
+# Operating Systems Study
