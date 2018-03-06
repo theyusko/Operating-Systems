@@ -59,8 +59,9 @@ void init_mq(mqd_t *mq, int index) {
     attr.mq_curmsgs = 0;
     attr.mq_msgsize = sizeof(int);
     attr.mq_maxmsg = 10;
-    
-	mq[index] = mq_open(name, O_RDWR | O_NONBLOCK | O_CREAT, 0666, &attr);
+
+    mq[index] = mq_open(name, O_RDWR | O_NONBLOCK | O_CREAT, 0666, &attr);
+	
     if (((int)mq[index]) == -1) {
         fprintf(stderr, "Error %d: Couldn't create message queue %d.\n",errno, i);
         return;
@@ -161,10 +162,9 @@ int main(int argc, char * argv[]) {
                 return 1;
             } else if (pid == 0) { //Ci
                 //printf("C%d is created\n",i+1);
-                
-                if (i != M - 1) { //CM already has its link with MP
+		
+                if (i != M - 1) //CM already has its link with MP
                     init_mq(mq, i + 1);
-                }
             }
             if (pid) //Already has a child
                 break;
@@ -174,16 +174,15 @@ int main(int argc, char * argv[]) {
 
         if (!i) { //MP
             //MP creates sequence of integers
-            for (int j = 2; j <= N; j++) {
+            for (int j = 2; j <= N; j++)
                 enQueue(sendq, j);
-            }
             enQueue(sendq, -1); //indicating end
 
             done = 0;
             send = 1;
             while (!done) {
-                num = 0;
-                //Send to C1
+               num = 0;
+               //Send to C1
                //printf("MP sending the sequence\n");
                while (!(sendq -> front == NULL) && send) { //there is an integer in the sequence MP sends
                     num = (sendq->front)->key; //don't dequeue, maybe sending won't be possible
@@ -206,7 +205,6 @@ int main(int argc, char * argv[]) {
                             exit(0);
                         }
                     }   
-                    
                 } 
                 
                 send = 0;
@@ -288,7 +286,6 @@ int main(int argc, char * argv[]) {
                     } else if (input % prime != 0) { //send to next child
                         write_nb(mq[i], input);
                         //printf("C%d sent value %d to next process.\n", i, input);
-    
                     }
                 }
             }
