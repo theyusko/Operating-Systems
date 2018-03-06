@@ -23,7 +23,7 @@ int read_nb(int fd) {
         result = read(fd, (char * ) & input, sizeof(int));
         if (result == sizeof(int)) {
             return input;
-        } else if (errno == EAGAIN) //pipe full
+        } else if (errno == EAGAIN) //pipe empty
             sleep(SLEEP_TIME); //try later
         else {
             printf("Error: %d. Couldn't read data %d properly from CM.\n", errno, input);
@@ -113,7 +113,6 @@ int main(int argc, char * argv[]) {
         done = 0;
         while (!done) {
             //printf("PR receiving the sequence\n");
-            start = 1;
             //Receive from Cis
             while (1) {
                 input = read_nb(pipefd[M + 1][READ_END]);
@@ -145,9 +144,8 @@ int main(int argc, char * argv[]) {
                 //printf("C%d is created\n",i+1);
                 close(pipefd[i][WRITE_END]); //Process Ci won't write to process Ci-1
 
-                if (i != M - 1) { //CM already has its link with MP
+                if (i != M - 1) //CM already has its link with MP
                     init_pipe(pipefd, i + 1);
-                }
             }
             if (pid) //Already has a child
                 break;
@@ -161,6 +159,7 @@ int main(int argc, char * argv[]) {
                 enQueue(sendq, j);
             }
             enQueue(sendq, -1); //indicating end
+            
             close(pipefd[M][WRITE_END]); //MP will only read from CM
             close(pipefd[0][READ_END]); // Close unused read end
 
@@ -169,8 +168,8 @@ int main(int argc, char * argv[]) {
             while (!done) {
                 num = 0;
                 //Send to C1
-               //printf("MP sending the sequence\n");
-               while (!(sendq -> front == NULL) && send) { //there is an integer in the sequence MP sends
+                //printf("MP sending the sequence\n");
+                while (!(sendq -> front == NULL) && send) { //there is an integer in the sequence MP sends
                     num = (sendq->front)->key; //don't dequeue, maybe sending won't be possible
                     while (1) {
                         //Try to send
@@ -248,9 +247,8 @@ int main(int argc, char * argv[]) {
             exit(0);
     
         } else { //Ci
-
-             int prime;
-
+            int prime;
+            
             done = 0;
             start = 1;
             input = -2;
@@ -277,7 +275,6 @@ int main(int argc, char * argv[]) {
                     } else if (input % prime != 0) { //send to next child
                         write_nb(pipefd[i][WRITE_END], input);
                         //printf("C%d sent value %d to next process.\n", i, input);
-    
                     }
                 }
             }
@@ -292,6 +289,4 @@ int main(int argc, char * argv[]) {
     for(int k = 0; k < M+2; k++)
         free(pipefd[i]);
     free(pipefd);
-    
-    
 }
